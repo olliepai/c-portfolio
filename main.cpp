@@ -24,31 +24,53 @@ int main(int argc, char** argv) {
     unsigned int shader = compileShaderVF(vertexShader, fragShader);
     glUseProgram(shader);
 
+    // enable buffer test for outline of ship
+    glEnable(GL_DEPTH_TEST);
+
     int positionId = glGetAttribLocation(shader, "position");
 
     float verts[] = {
-      //top left
-      -1, 0, -1,
-      0, 0.3, -1,
-      0, 0, 1,
+      // top left
+      -4, 0, -4,
+      0, 1, -5.2,
+      0, 0, 5.4,
 
-      //top right
-      1, 0, -1,
-      0, 0.3, -1,
-      0, 0, 1,
+      // top right
+      4, 0, -4,
+      0, 1, -5.2,
+      0, 0, 5.4,
 
-      //bottom left
-      -1, 0, -1,
-      0, -0.3, -1,
-      0, 0, 1,
+      // bottom left
+      -4, 0, -4,
+      0, -1, -5.2,
+      0, 0, 5.4,
 
-      //bottom right
-      1, 0, -1,
-      0, -.3, -1,
-      0, 0, 1
+      // bottom right
+      4, 0, -4,
+      0, -1, -5.2,
+      0, 0, 5.4,
+
+      // left superstructure
+      -1, .6, -4.8,
+      -1, 2, -3.8,
+      -1, .6, -3.8,
+
+      // right superstructure
+      1, .6, -4.8,
+      1, 2, -3.8,
+      1, .6, -3.8,
+
+      // rear superstructure
+      -1, .6, -4.8,
+      -1, 2, -3.8,
+      1, .6, -4.8,
+
+      1, .6, -4.8,
+      1, 2, -3.8,
+      -1, 2, -3.8,
     };
 
-    unsigned short indices[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    unsigned short indices[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
 
     // linking verts with vertex shaders
     unsigned int vao, vbo, ibo;
@@ -90,6 +112,12 @@ int main(int argc, char** argv) {
     viewMatrix.translate(camera.position);
     glUniformMatrix4fv(viewMatrixId, 1, false, viewMatrix.m[0]);
 
+    // setting up fragColor
+    int fragColorId = glGetUniformLocation(shader, "fragColor");
+    vec4 fragColor = vec4(.5, .5, .5, 1);
+    glUniform4fv(fragColorId, 1, &fragColor.v[0]);
+
+    // setting background color
     glClearColor(0, 0.5, 1, 1);
 
     // setting up the clock
@@ -116,7 +144,7 @@ int main(int argc, char** argv) {
     bool yawLeft = false;
     bool yawRight = false;
 
-    float camMoveSpeed = 0.01;
+    float camMoveSpeed = 0.005;
     float camRotateSpeed = 0.001;
 
     while (isRunning) {
@@ -130,29 +158,29 @@ int main(int argc, char** argv) {
             case SDL_KEYDOWN: {
               if(event.key.keysym.sym == SDLK_ESCAPE){
                   isRunning = false;
-              }else if(event.key.keysym.sym == SDLK_UP){
+              } else if(event.key.keysym.sym == SDLK_UP){
                   pitchUp = true;
-              }else if(event.key.keysym.sym == SDLK_DOWN){
+              } else if(event.key.keysym.sym == SDLK_DOWN){
                   pitchDown = true;
-              }else if(event.key.keysym.sym == SDLK_LEFT){
+              } else if(event.key.keysym.sym == SDLK_LEFT){
                   yawLeft = true;
-              }else if(event.key.keysym.sym == SDLK_RIGHT){
+              } else if(event.key.keysym.sym == SDLK_RIGHT){
                   yawRight = true;
-              }else if(event.key.keysym.sym == SDLK_w){
+              } else if(event.key.keysym.sym == SDLK_w){
                   moveForward = true;
-              }else if(event.key.keysym.sym == SDLK_s){
+              } else if(event.key.keysym.sym == SDLK_s){
                   moveBack = true;
-              }else if(event.key.keysym.sym == SDLK_a){
+              } else if(event.key.keysym.sym == SDLK_a){
                   moveLeft = true;
-              }else if(event.key.keysym.sym == SDLK_d){
+              } else if(event.key.keysym.sym == SDLK_d){
                   moveRight = true;
-              }else if(event.key.keysym.sym == SDLK_q){
+              } else if(event.key.keysym.sym == SDLK_q){
                   rollLeft = true;
-              }else if(event.key.keysym.sym == SDLK_e){
+              } else if(event.key.keysym.sym == SDLK_e){
                   rollRight = true;
-              }else if(event.key.keysym.sym == SDLK_r){
+              } else if(event.key.keysym.sym == SDLK_r){
                   moveDown = true;
-              }else if(event.key.keysym.sym == SDLK_f){
+              } else if(event.key.keysym.sym == SDLK_f){
                   moveUp = true;
               }
 
@@ -161,27 +189,27 @@ int main(int argc, char** argv) {
             case SDL_KEYUP :{
               if(event.key.keysym.sym == SDLK_UP){
                   pitchUp = false;
-              }else if(event.key.keysym.sym == SDLK_DOWN){
+              } else if(event.key.keysym.sym == SDLK_DOWN){
                   pitchDown = false;
-              }else if(event.key.keysym.sym == SDLK_LEFT){
+              } else if(event.key.keysym.sym == SDLK_LEFT){
                   yawLeft = false;
-              }else if(event.key.keysym.sym == SDLK_RIGHT){
+              } else if(event.key.keysym.sym == SDLK_RIGHT){
                   yawRight = false;
-              }else if(event.key.keysym.sym == SDLK_w){
+              } else if(event.key.keysym.sym == SDLK_w){
                   moveForward = false;
-              }else if(event.key.keysym.sym == SDLK_s){
+              } else if(event.key.keysym.sym == SDLK_s){
                   moveBack = false;
-              }else if(event.key.keysym.sym == SDLK_a){
+              } else if(event.key.keysym.sym == SDLK_a){
                   moveLeft = false;
-              }else if(event.key.keysym.sym == SDLK_d){
+              } else if(event.key.keysym.sym == SDLK_d){
                   moveRight = false;
-              }else if(event.key.keysym.sym == SDLK_q){
+              } else if(event.key.keysym.sym == SDLK_q){
                   rollLeft = false;
-              }else if(event.key.keysym.sym == SDLK_e){
+              } else if(event.key.keysym.sym == SDLK_e){
                   rollRight = false;
-              }else if(event.key.keysym.sym == SDLK_r){
+              } else if(event.key.keysym.sym == SDLK_r){
                   moveDown = false;
-              }else if(event.key.keysym.sym == SDLK_f){
+              } else if(event.key.keysym.sym == SDLK_f){
                   moveUp = false;
               }
               break;
@@ -194,7 +222,7 @@ int main(int argc, char** argv) {
           }
         }
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         camera.position -= vec3(camera.forward.x * camMoveSpeed * moveForward,
                                 camera.forward.y * camMoveSpeed * moveForward,
@@ -241,7 +269,13 @@ int main(int argc, char** argv) {
         glUniformMatrix4fv(modelMatrixId, 1, false, &modelMatrix.m[0][0]);
 
         // rendering goes here
-        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_SHORT, 0);
+        fragColor = vec4(.5, .5, .5, 1);
+        glUniform4fv(fragColorId, 1, &fragColor.v[0]);
+        glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_SHORT, 0);
+
+        fragColor = vec4(0, 0, 0, 1);
+        glUniform4fv(fragColorId, 1, &fragColor.v[0]);
+        glDrawElements(GL_LINES, 24, GL_UNSIGNED_SHORT, 0);
 
         SDL_GL_SwapWindow(window);
 
